@@ -1,14 +1,24 @@
-// Types
+// Types and Interfaces
 type Theme = 'light' | 'dark';
 
-interface FormElements extends HTMLFormControlsCollection {
-    name: HTMLInputElement;
-    email: HTMLInputElement;
-    message: HTMLTextAreaElement;
+interface ContactFormData {
+    name: string;
+    email: string;
+    message: string;
 }
 
-interface ContactForm extends HTMLFormElement {
-    readonly elements: FormElements;
+interface ProjectCard {
+    id: number;
+    title: string;
+    description: string;
+    imageUrl: string;
+}
+
+// Event Handlers Interface
+interface EventHandlers {
+    handleThemeToggle(): void;
+    handleNavigation(e: Event): void;
+    handleFormSubmit(e: SubmitEvent): Promise<void>;
 }
 
 // DOM Element Selectors
@@ -40,40 +50,40 @@ class DOMSelectors {
     }
 }
 
-// Theme Manager
+// Theme Manager with better typing
 class ThemeManager {
-    private themeToggle: HTMLElement;
-    private body: HTMLElement;
-    private isDark: boolean;
+    private readonly themeToggle: HTMLElement;
+    private readonly body: HTMLElement;
+    private currentTheme: Theme;
+    private readonly STORAGE_KEY = 'theme';
 
     constructor() {
         this.themeToggle = document.querySelector('.theme-toggle') as HTMLElement;
         this.body = document.body;
-        this.isDark = localStorage.getItem('theme') === 'dark';
+        this.currentTheme = (localStorage.getItem(this.STORAGE_KEY) as Theme) || 'light';
         this.initialize();
     }
 
-    initialize(): void {
-        // Set initial theme
-        this.setTheme(this.isDark);
-
-        // Add click event listener
-        this.themeToggle.addEventListener('click', () => {
-            this.isDark = !this.isDark;
-            this.setTheme(this.isDark);
-        });
+    private initialize(): void {
+        this.setTheme(this.currentTheme);
+        this.themeToggle.addEventListener('click', this.handleThemeToggle.bind(this));
     }
 
-    private setTheme(isDark: boolean): void {
-        if (isDark) {
+    private handleThemeToggle(): void {
+        this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        this.setTheme(this.currentTheme);
+    }
+
+    private setTheme(theme: Theme): void {
+        const icon = this.themeToggle.querySelector('i');
+        if (theme === 'dark') {
             this.body.classList.add('dark-theme');
-            this.themeToggle.querySelector('i')?.classList.replace('fa-moon', 'fa-sun');
+            icon?.classList.replace('fa-moon', 'fa-sun');
         } else {
             this.body.classList.remove('dark-theme');
-            this.themeToggle.querySelector('i')?.classList.replace('fa-sun', 'fa-moon');
+            icon?.classList.replace('fa-sun', 'fa-moon');
         }
-        // Save theme preference
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        localStorage.setItem(this.STORAGE_KEY, theme);
     }
 }
 
@@ -103,75 +113,147 @@ class NavigationManager {
     }
 }
 
-// Form Manager
+// Form Manager with async/await and better error handling
 class FormManager {
-    private readonly form: ContactForm;
-    
+    private readonly form: HTMLFormElement;
+    private readonly emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     constructor() {
-        this.form = document.getElementById('contact-form') as ContactForm;
-        this.bindEvents();
+        const form = document.getElementById('contact-form');
+        if (!form) throw new Error('Contact form not found');
+        this.form = form as HTMLFormElement;
+        this.initialize();
     }
 
-    private bindEvents(): void {
-        this.form.addEventListener('submit', (e: Event) => this.handleSubmit(e));
+    private initialize(): void {
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
     }
 
-    private handleSubmit(e: Event): void {
+    private async handleSubmit(e: SubmitEvent): Promise<void> {
         e.preventDefault();
         
-        // Here you would typically handle the form submission
-        // For now, we'll just show an alert
-        alert('Thank you for your message! I will get back to you soon.');
-        this.form.reset();
+        try {
+            const formData = this.getFormData();
+            if (!this.validateForm(formData)) return;
+            
+            await this.submitForm(formData);
+            this.showSuccess('Message sent successfully!');
+            this.form.reset();
+        } catch (error) {
+            this.showError(error instanceof Error ? error.message : 'An unknown error occurred');
+        }
+    }
+
+    private getFormData(): ContactFormData {
+        const formElements = this.form.elements as HTMLFormControlsCollection & {
+            name: HTMLInputElement;
+            email: HTMLInputElement;
+            message: HTMLTextAreaElement;
+        };
+
+        return {
+            name: formElements.name.value.trim(),
+            email: formElements.email.value.trim(),
+            message: formElements.message.value.trim()
+        };
+    }
+
+    private validateForm(data: ContactFormData): boolean {
+        if (!data.name) {
+            this.showError('Please enter your name');
+            return false;
+        }
+        if (!this.emailRegex.test(data.email)) {
+            this.showError('Please enter a valid email');
+            return false;
+        }
+        if (!data.message) {
+            this.showError('Please enter a message');
+            return false;
+        }
+        return true;
+    }
+
+    private async submitForm(data: ContactFormData): Promise<void> {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Form submitted:', data);
+    }
+
+    private showSuccess(message: string): void {
+        alert(message); // In real app, use better UI feedback
+    }
+
+    private showError(message: string): void {
+        alert(`Error: ${message}`); // In real app, use better UI feedback
     }
 }
 
-// Smooth Scroll Manager
-class SmoothScrollManager {
-    private readonly dom: DOMSelectors;
+// Project Manager for handling project cards
+class ProjectManager {
+    private readonly projectContainer: HTMLElement;
+    private projects: ProjectCard[] = [
+        {
+            id: 1,
+            title: 'Goal 1',
+            description: 'Making this website',
+            imageUrl: 'https://via.placeholder.com/300x200'
+        },
+        // Add other projects...
+    ];
 
     constructor() {
-        this.dom = DOMSelectors.getInstance();
-        this.bindEvents();
+        const container = document.querySelector('.project-grid');
+        if (!container) throw new Error('Project container not found');
+        this.projectContainer = container as HTMLElement;
+        this.initialize();
     }
 
-    private bindEvents(): void {
-        this.dom.getElements<HTMLAnchorElement>('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', (e: Event) => this.handleClick(e, anchor));
-        });
+    private initialize(): void {
+        this.renderProjects();
     }
 
-    private handleClick(e: Event, anchor: HTMLAnchorElement): void {
-        e.preventDefault();
-        const targetId = anchor.getAttribute('href');
-        if (!targetId) return;
+    private renderProjects(): void {
+        this.projectContainer.innerHTML = this.projects
+            .map(project => this.createProjectCard(project))
+            .join('');
+    }
 
-        const target = document.querySelector(targetId);
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth'
-            });
+    private createProjectCard(project: ProjectCard): string {
+        return `
+            <div class="project-card" data-project-id="${project.id}">
+                <img src="${project.imageUrl}" alt="${project.title}">
+                <h3>${project.title}</h3>
+                <p>${project.description}</p>
+            </div>
+        `;
+    }
+}
+
+// App class with better error handling and initialization
+class App {
+    private themeManager?: ThemeManager;
+    private formManager?: FormManager;
+    private projectManager?: ProjectManager;
+
+    constructor() {
+        console.log('App initializing...');
+        this.initialize();
+    }
+
+    private initialize(): void {
+        try {
+            this.themeManager = new ThemeManager();
+            this.formManager = new FormManager();
+            this.projectManager = new ProjectManager();
+            console.log('App initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize app:', error);
         }
     }
 }
 
-// App Initialization
-class App {
-    private readonly themeManager: ThemeManager;
-    private readonly navigationManager: NavigationManager;
-    private readonly formManager: FormManager;
-    private readonly smoothScrollManager: SmoothScrollManager;
-
-    constructor() {
-        // Initialize all managers
-        this.themeManager = new ThemeManager();
-        this.navigationManager = new NavigationManager();
-        this.formManager = new FormManager();
-        this.smoothScrollManager = new SmoothScrollManager();
-    }
-}
-
-// Initialize the app when DOM is loaded
+// Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 }); 
