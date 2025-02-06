@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ES2020",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "removeComments": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "lib": ["DOM", "ES6", "DOM.Iterable", "ScriptHost"]
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
+} 
