@@ -199,9 +199,20 @@ class ProjectManager {
             description: 'Making this website',
             imageUrl: 'https://via.placeholder.com/300x200'
         },
-        // Add other projects...
+        {
+            id: 2,
+            title: 'Goal 2',
+            description: 'Learning TypeScript',
+            imageUrl: 'https://via.placeholder.com/300x200'
+        },
+        {
+            id: 3,
+            title: 'Goal 3',
+            description: 'Building a portfolio',
+            imageUrl: 'https://via.placeholder.com/300x200'
+        },
+        // Add more projects as needed...
     ];
-
     constructor() {
         const container = document.querySelector('.project-grid');
         if (!container) throw new Error('Project container not found');
