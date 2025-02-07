@@ -69,66 +69,6 @@ class NavigationManager {
         });
     }
 }
-class FormManager {
-    constructor() {
-        this.emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const form = document.getElementById('contact-form');
-        if (!form)
-            throw new Error('Contact form not found');
-        this.form = form;
-        this.initialize();
-    }
-    initialize() {
-        this.form.addEventListener('submit', this.handleSubmit.bind(this));
-    }
-    async handleSubmit(e) {
-        e.preventDefault();
-        try {
-            const formData = this.getFormData();
-            if (!this.validateForm(formData))
-                return;
-            await this.submitForm(formData);
-            this.showSuccess('Message sent successfully!');
-            this.form.reset();
-        }
-        catch (error) {
-            this.showError(error instanceof Error ? error.message : 'An unknown error occurred');
-        }
-    }
-    getFormData() {
-        const formElements = this.form.elements;
-        return {
-            name: formElements.name.value.trim(),
-            email: formElements.email.value.trim(),
-            message: formElements.message.value.trim()
-        };
-    }
-    validateForm(data) {
-        if (!data.name) {
-            this.showError('Please enter your name');
-            return false;
-        }
-        if (!this.emailRegex.test(data.email)) {
-            this.showError('Please enter a valid email');
-            return false;
-        }
-        if (!data.message) {
-            this.showError('Please enter a message');
-            return false;
-        }
-        return true;
-    }
-    async submitForm(data) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Form submitted:', data);
-    }
-    showSuccess(message) {
-        alert(message);
-    }
-    showError(message) {
-        alert(`Error: ${message}`);
-    }
-}
 class ProjectManager {
     constructor() {
         this.projects = [
@@ -183,7 +123,6 @@ class App {
     initialize() {
         try {
             this.themeManager = new ThemeManager();
-            this.formManager = new FormManager();
             this.projectManager = new ProjectManager();
             console.log('App initialized successfully');
         }

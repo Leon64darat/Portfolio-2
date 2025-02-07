@@ -18,7 +18,6 @@ interface ProjectCard {
 interface EventHandlers {
     handleThemeToggle(): void;
     handleNavigation(e: Event): void;
-    handleFormSubmit(e: SubmitEvent): Promise<void>;
 }
 
 // DOM Element Selectors
@@ -113,82 +112,6 @@ class NavigationManager {
     }
 }
 
-// Form Manager with async/await and better error handling
-class FormManager {
-    private readonly form: HTMLFormElement;
-    private readonly emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    constructor() {
-        const form = document.getElementById('contact-form');
-        if (!form) throw new Error('Contact form not found');
-        this.form = form as HTMLFormElement;
-        this.initialize();
-    }
-
-    private initialize(): void {
-        this.form.addEventListener('submit', this.handleSubmit.bind(this));
-    }
-
-    private async handleSubmit(e: SubmitEvent): Promise<void> {
-        e.preventDefault();
-        
-        try {
-            const formData = this.getFormData();
-            if (!this.validateForm(formData)) return;
-            
-            await this.submitForm(formData);
-            this.showSuccess('Message sent successfully!');
-            this.form.reset();
-        } catch (error) {
-            this.showError(error instanceof Error ? error.message : 'An unknown error occurred');
-        }
-    }
-
-    private getFormData(): ContactFormData {
-        const formElements = this.form.elements as HTMLFormControlsCollection & {
-            name: HTMLInputElement;
-            email: HTMLInputElement;
-            message: HTMLTextAreaElement;
-        };
-
-        return {
-            name: formElements.name.value.trim(),
-            email: formElements.email.value.trim(),
-            message: formElements.message.value.trim()
-        };
-    }
-
-    private validateForm(data: ContactFormData): boolean {
-        if (!data.name) {
-            this.showError('Please enter your name');
-            return false;
-        }
-        if (!this.emailRegex.test(data.email)) {
-            this.showError('Please enter a valid email');
-            return false;
-        }
-        if (!data.message) {
-            this.showError('Please enter a message');
-            return false;
-        }
-        return true;
-    }
-
-    private async submitForm(data: ContactFormData): Promise<void> {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Form submitted:', data);
-    }
-
-    private showSuccess(message: string): void {
-        alert(message); // In real app, use better UI feedback
-    }
-
-    private showError(message: string): void {
-        alert(`Error: ${message}`); // In real app, use better UI feedback
-    }
-}
-
 // Project Manager for handling project cards
 class ProjectManager {
     private readonly projectContainer: HTMLElement;
@@ -213,6 +136,7 @@ class ProjectManager {
         },
         // Add more projects as needed...
     ];
+    
     constructor() {
         const container = document.querySelector('.project-grid');
         if (!container) throw new Error('Project container not found');
@@ -244,7 +168,6 @@ class ProjectManager {
 // App class with better error handling and initialization
 class App {
     private themeManager?: ThemeManager;
-    private formManager?: FormManager;
     private projectManager?: ProjectManager;
 
     constructor() {
@@ -255,7 +178,6 @@ class App {
     private initialize(): void {
         try {
             this.themeManager = new ThemeManager();
-            this.formManager = new FormManager();
             this.projectManager = new ProjectManager();
             console.log('App initialized successfully');
         } catch (error) {
